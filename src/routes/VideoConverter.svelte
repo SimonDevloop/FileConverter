@@ -12,6 +12,7 @@
   let errorMsg = $state('')
 
   const formats: VideoFormat[] = ['mp4', 'webm', 'avi', 'mov', 'mkv']
+  const MAX_RECOMMENDED_MB = 500
 
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement
@@ -76,15 +77,20 @@
   <p class="desc">Compress or convert videos to another format. All processing stays on your device.</p>
 
   <div class="section">
-    <label class="uploadArea" for="video-input" class:hasFile={!!file}>
+    <label class="uploadArea" for="vidconv-input" class:hasFile={!!file}>
       {#if file}
         <span class="fileName">{file.name}</span>
         <span class="fileSize">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
       {:else}
         <span>Choose a video file</span>
       {/if}
-      <input id="video-input" type="file" accept="video/*" onchange={handleFileSelect} />
+      <input id="vidconv-input" type="file" accept="video/*" onchange={handleFileSelect} />
     </label>
+    {#if file && file.size > MAX_RECOMMENDED_MB * 1024 * 1024}
+      <p class="warn">
+        Large file ({(file.size / 1024 / 1024).toFixed(0)} MB) — browser memory limits may prevent processing. Consider using a file under {MAX_RECOMMENDED_MB} MB or the native ffmpeg command line.
+      </p>
+    {/if}
   </div>
 
   {#if file}
@@ -114,7 +120,7 @@
         <button onclick={handleConvert}>Convert</button>
       {:else if status === 'done'}
         <button onclick={download}>Download</button>
-        <button onclick={() => { file = null; status = 'idle'; resultBlob = null; }}>Convert another</button>
+        <button onclick={() => { file = null; status = 'idle'; resultBlob = null; document.querySelector<HTMLInputElement>('#vidconv-input')!.value = ''; }}>Convert another</button>
       {:else if status === 'error'}
         <button onclick={load}>Retry Load</button>
       {/if}
@@ -217,6 +223,13 @@
       margin-top: 12px;
       font-size: 13px;
       color: #f87171;
+    }
+
+    .warn {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #fbbf24;
+      line-height: 1.5;
     }
   }
 </style>

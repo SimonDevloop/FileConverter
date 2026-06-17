@@ -12,7 +12,7 @@
   let originalUrl = $state('')
   let errorMsg = $state('')
 
-  const formats: ImageFormat[] = ['png', 'jpeg', 'webp', 'avif']
+  const formats: ImageFormat[] = ['png', 'jpeg', 'webp', 'avif', 'ico']
 
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement

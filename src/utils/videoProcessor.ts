@@ -31,7 +31,16 @@ export async function readFileAsBuffer(file: File): Promise<Uint8Array> {
         reject(new Error('Failed to read file'))
       }
     }
-    reader.onerror = () => reject(reader.error)
+    reader.onerror = () => {
+      const err = reader.error
+      if (err && err.name === 'NotReadableError') {
+        reject(new Error(
+          'Could not read the selected file. It may have been moved, deleted, or is no longer accessible. Please select the file again.'
+        ))
+      } else {
+        reject(err ?? new Error('Unknown FileReader error'))
+      }
+    }
     reader.readAsArrayBuffer(file)
   })
 }
@@ -40,7 +49,7 @@ export async function loadFFmpeg(onLog?: (msg: string) => void) {
   if (loaded) return
   userLogCallback = onLog ?? null
 
-  const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd'
+  const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm'
 
   await ffmpeg.load({
     coreURL: `${baseURL}/ffmpeg-core.js`,

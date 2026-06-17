@@ -6,6 +6,7 @@
   let file = $state<File | null>(null)
   let targetSize = $state('10')
   let status = $state<'idle' | 'compressing' | 'done' | 'error'>('idle')
+  const MAX_RECOMMENDED_MB = 500
   let progress = $state(0)
   let result = $state<CompressResult | null>(null)
   let errorMsg = $state('')
@@ -60,15 +61,20 @@
   <p class="desc">Reduce a video file to fit a specific size. Select a target in MB and the compressor calculates the optimal bitrate.</p>
 
   <div class="section">
-    <label class="uploadArea" for="video-input" class:hasFile={!!file}>
+    <label class="uploadArea" for="vidcomp-input" class:hasFile={!!file}>
       {#if file}
         <span class="fileName">{file.name}</span>
         <span class="fileSize">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
       {:else}
         <span>Choose a video file</span>
       {/if}
-      <input id="video-input" type="file" accept="video/*" onchange={handleFileSelect} />
+      <input id="vidcomp-input" type="file" accept="video/*" onchange={handleFileSelect} />
     </label>
+    {#if file && file.size > MAX_RECOMMENDED_MB * 1024 * 1024}
+      <p class="warn">
+        Large file ({(file.size / 1024 / 1024).toFixed(0)} MB) — browser memory limits may prevent processing. Consider using a file under {MAX_RECOMMENDED_MB} MB or the native ffmpeg command line.
+      </p>
+    {/if}
   </div>
 
   {#if file}
@@ -84,7 +90,7 @@
         <button disabled>Compressing…</button>
       {:else if status === 'done'}
         <button onclick={download}>Download</button>
-        <button onclick={() => { file = null; status = 'idle'; result = null; }}>Compress another</button>
+        <button onclick={() => { file = null; status = 'idle'; result = null; document.querySelector<HTMLInputElement>('#vidcomp-input')!.value = ''; }}>Compress another</button>
       {:else}
         <button onclick={handleCompress} disabled={!targetSize || parseFloat(targetSize) <= 0}>
           Compress
@@ -244,6 +250,13 @@
       margin-top: 12px;
       font-size: 13px;
       color: #f87171;
+    }
+
+    .warn {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #fbbf24;
+      line-height: 1.5;
     }
   }
 </style>
